@@ -1,0 +1,76 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Unit tests and release bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platforms;android-36.1" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode upload keystore when secrets are present
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${ANDROID_KEYSTORE_BASE64}" ] && [ -n "${ANDROID_KEYSTORE_PASSWORD}" ] && [ -n "${ANDROID_KEY_ALIAS}" ] && [ -n "${ANDROID_KEY_PASSWORD}" ]; then
+            printf '%s' "${ANDROID_KEYSTORE_BASE64}" | tr -d '[:space:]' | base64 -d > "${RUNNER_TEMP}/upload-keystore.jks"
+            {
+              echo "ANDROID_KEYSTORE_FILE<<EOF"
+              echo "${RUNNER_TEMP}/upload-keystore.jks"
+              echo "EOF"
+              echo "ANDROID_KEYSTORE_PASSWORD<<EOF"
+              echo "${ANDROID_KEYSTORE_PASSWORD}"
+              echo "EOF"
+              echo "ANDROID_KEY_ALIAS<<EOF"
+              echo "${ANDROID_KEY_ALIAS}"
+              echo "EOF"
+              echo "ANDROID_KEY_PASSWORD<<EOF"
+              echo "${ANDROID_KEY_PASSWORD}"
+              echo "EOF"
+            } >> "${GITHUB_ENV}"
+            echo "Upload keystore decoded. The release bundle will be signed."
+          else
+            echo "Upload keystore secrets are not all set. The release bundle will be unsigned."
+          fi
+
+      - name: Unit tests and release bundle
+        run: ./gradlew testDebugUnitTest bundleRelease --stacktrace
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
