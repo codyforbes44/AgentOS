@@ -1,5 +1,9 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +31,7 @@ fun SettingsScreen(
     viewModel: AgentOSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val settings by viewModel.settings.collectAsState()
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
     val currSettings = settings ?: SystemSettingsEntity()
 
     var dailyCapSlider by remember(currSettings) { mutableStateOf(currSettings.dailyCostCapUSD.toFloat()) }
@@ -43,13 +47,13 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "System Governance & Security",
+            text = stringResource(R.string.settings_title),
             color = TextPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )
         Text(
-            text = "Access control, circuit breakers & global kill switch",
+            text = stringResource(R.string.settings_subtitle),
             color = TextSecondary,
             fontSize = 12.sp
         )
@@ -75,18 +79,22 @@ fun SettingsScreen(
                             .background(StatusError),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.PowerSettingsNew, contentDescription = "Kill Switch", tint = TextPrimary)
+                        Icon(imageVector = Icons.Default.PowerSettingsNew, contentDescription = stringResource(R.string.cd_kill_switch), tint = TextPrimary)
                     }
 
                     Column {
                         Text(
-                            text = if (currSettings.emergencyKillSwitchEngaged) "KILL SWITCH ENGAGED" else "Emergency Kill Switch",
+                            text = if (currSettings.emergencyKillSwitchEngaged) {
+                                stringResource(R.string.settings_kill_engaged)
+                            } else {
+                                stringResource(R.string.settings_kill_title)
+                            },
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Global System Circuit Breaker",
+                            text = stringResource(R.string.settings_kill_subtitle),
                             color = if (currSettings.emergencyKillSwitchEngaged) TextPrimary else StatusError,
                             fontSize = 11.sp
                         )
@@ -97,7 +105,7 @@ fun SettingsScreen(
 
                 // Exact microcopy as mandated by specification
                 Text(
-                    text = "Stop all active execution threads immediately? Unsaved task progress will be lost.",
+                    text = stringResource(R.string.settings_kill_body),
                     color = TextPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -112,12 +120,12 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .heightIn(min = 48.dp)
                             .testTag("reset_kill_switch_button")
                     ) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset", tint = BackgroundDark)
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null, tint = OnStatusFill)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Reset Operational State", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_kill_reset), color = OnStatusFill, fontWeight = FontWeight.Bold)
                     }
                 } else {
                     Button(
@@ -126,12 +134,12 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .heightIn(min = 48.dp)
                             .testTag("trigger_kill_switch_button")
                     ) {
-                        Icon(imageVector = Icons.Default.PowerSettingsNew, contentDescription = "Kill All", tint = TextPrimary)
+                        Icon(imageVector = Icons.Default.PowerSettingsNew, contentDescription = null, tint = TextPrimary)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("ENGAGE EMERGENCY KILL SWITCH", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_kill_engage), color = TextPrimary, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -140,7 +148,7 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Security & RBAC Access Control Section
-        Text(text = "Security & Role-Based Access Control (RBAC)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = stringResource(R.string.settings_rbac_title), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
         Surface(
@@ -154,19 +162,19 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Key, contentDescription = "Enclave Key", tint = StatusOnline, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Key, contentDescription = stringResource(R.string.cd_enclave_key), tint = StatusOnline, modifier = Modifier.size(18.dp))
                     Text(
-                        text = "Key encrypted locally via Secure Enclave. Never sent to AgentOS servers.",
+                        text = stringResource(R.string.settings_key_note),
                         color = TextSecondary,
                         fontSize = 11.sp
                     )
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
-                Divider(color = SurfaceBorderDark)
+                HorizontalDivider(color = SurfaceBorderDark)
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Text(text = "Active RBAC Role Selection", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.settings_role_label), color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
@@ -180,11 +188,12 @@ fun SettingsScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
                                 .weight(1f)
+                                .defaultMinSize(minHeight = 48.dp)
                                 .clickable { viewModel.updateRole(role) }
                         ) {
                             Text(
                                 text = role,
-                                color = if (isSel) BackgroundDark else TextPrimary,
+                                color = if (isSel) OnStatusFill else TextPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -199,7 +208,7 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Global Spending Thresholds & Circuit Breakers
-        Text(text = "Global Cost & Safety Thresholds", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = stringResource(R.string.settings_thresholds_title), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
         Surface(
@@ -213,8 +222,8 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Daily Organization Spending Limit", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                    Text(text = "$${dailyCapSlider.toInt()} USD", color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(text = stringResource(R.string.settings_daily_limit), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(text = stringResource(R.string.settings_daily_value, dailyCapSlider.toInt()), color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
 
                 Slider(
@@ -234,12 +243,12 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(text = "Automatic Circuit Breaker", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        Text(text = "Auto-pause agents upon spending limit breach", color = TextSecondary, fontSize = 11.sp)
+                        Text(text = stringResource(R.string.settings_circuit_breaker), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Text(text = stringResource(R.string.settings_circuit_breaker_hint), color = TextSecondary, fontSize = 11.sp)
                     }
                     Switch(
                         checked = currSettings.circuitBreakerEnabled,
-                        onCheckedChange = { },
+                        onCheckedChange = { viewModel.updateCircuitBreaker(it) },
                         colors = SwitchDefaults.colors(checkedThumbColor = CyanAccent)
                     )
                 }
@@ -258,13 +267,13 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Warning, contentDescription = "Warning", tint = StatusError)
-                        Text("Confirm Emergency Kill Switch", color = StatusError, fontWeight = FontWeight.Bold)
+                        Icon(imageVector = Icons.Default.Warning, contentDescription = stringResource(R.string.cd_warning), tint = StatusError)
+                        Text(stringResource(R.string.settings_kill_confirm_title), color = StatusError, fontWeight = FontWeight.Bold)
                     }
                 },
                 text = {
                     Text(
-                        text = "Stop all active execution threads immediately? Unsaved task progress will be lost.",
+                        text = stringResource(R.string.settings_kill_body),
                         color = TextPrimary,
                         fontSize = 13.sp
                     )
@@ -274,12 +283,12 @@ fun SettingsScreen(
                         onClick = { viewModel.triggerEmergencyKillSwitch() },
                         colors = ButtonDefaults.buttonColors(containerColor = StatusError)
                     ) {
-                        Text("YES, HALT ALL EXECUTIONS", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_kill_confirm), fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { showKillModal = false }) {
-                        Text("Cancel", color = TextSecondary)
+                        Text(stringResource(R.string.action_cancel), color = TextSecondary)
                     }
                 }
             )

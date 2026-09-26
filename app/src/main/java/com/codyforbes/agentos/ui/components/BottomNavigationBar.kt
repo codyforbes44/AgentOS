@@ -9,8 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.codyforbes.agentos.R
 import com.codyforbes.agentos.ui.theme.*
 
 data class NavItem(
@@ -20,11 +24,12 @@ data class NavItem(
     val tag: String
 )
 
-val bottomNavItems = listOf(
-    NavItem("Agents", Icons.Filled.SmartToy, Icons.Outlined.SmartToy, "nav_agents"),
-    NavItem("Tasks", Icons.Filled.Task, Icons.Outlined.Task, "nav_tasks"),
-    NavItem("Analytics", Icons.Filled.Analytics, Icons.Outlined.Analytics, "nav_analytics"),
-    NavItem("Settings", Icons.Filled.Settings, Icons.Outlined.Settings, "nav_settings")
+@Composable
+private fun bottomNavItems(): List<NavItem> = listOf(
+    NavItem(stringResource(R.string.nav_agents), Icons.Filled.SmartToy, Icons.Outlined.SmartToy, "nav_agents"),
+    NavItem(stringResource(R.string.nav_tasks), Icons.Filled.Task, Icons.Outlined.Task, "nav_tasks"),
+    NavItem(stringResource(R.string.nav_analytics), Icons.Filled.Analytics, Icons.Outlined.Analytics, "nav_analytics"),
+    NavItem(stringResource(R.string.nav_settings), Icons.Filled.Settings, Icons.Outlined.Settings, "nav_settings"),
 )
 
 @Composable
@@ -34,13 +39,15 @@ fun AgentOSBottomNavigation(
     hitlBadgeCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    val items = bottomNavItems()
+    val badgeDescription = stringResource(R.string.cd_hitl_badge_count, hitlBadgeCount)
     NavigationBar(
         containerColor = SurfaceDark,
         tonalElevation = 8.dp,
         windowInsets = WindowInsets.navigationBars,
         modifier = modifier
     ) {
-        bottomNavItems.forEachIndexed { index, item ->
+        items.forEachIndexed { index, item ->
             val isSelected = selectedTab == index
             NavigationBarItem(
                 selected = isSelected,
@@ -50,14 +57,20 @@ fun AgentOSBottomNavigation(
                         badge = {
                             if (index == 1 && hitlBadgeCount > 0) {
                                 Badge(containerColor = StatusApprovalRequired) {
-                                    Text(text = "$hitlBadgeCount", color = BackgroundDark)
+                                    Text(
+                                        text = "$hitlBadgeCount",
+                                        color = OnStatusFill,
+                                        modifier = Modifier.clearAndSetSemantics {
+                                            contentDescription = badgeDescription
+                                        },
+                                    )
                                 }
                             }
                         }
                     ) {
                         Icon(
                             imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                            contentDescription = item.title,
+                            contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
                     }

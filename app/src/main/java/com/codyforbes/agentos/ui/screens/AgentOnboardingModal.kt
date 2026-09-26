@@ -1,5 +1,9 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +14,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
@@ -25,15 +30,15 @@ fun AgentOnboardingModal(
     viewModel: AgentOSViewModel,
     onDismiss: () -> Unit
 ) {
-    val name by viewModel.obName.collectAsState()
-    val provider by viewModel.obProvider.collectAsState()
-    val endpoint by viewModel.obEndpoint.collectAsState()
-    val apiKey by viewModel.obApiKey.collectAsState()
-    val maxCostCap by viewModel.obMaxCostCap.collectAsState()
-    val timeout by viewModel.obTimeout.collectAsState()
-    val hitlEnabled by viewModel.obHitlEnabled.collectAsState()
-    val isPinging by viewModel.isPingTesting.collectAsState()
-    val pingBadge by viewModel.pingSuccessBadge.collectAsState()
+    val name by viewModel.obName.collectAsStateWithLifecycle()
+    val provider by viewModel.obProvider.collectAsStateWithLifecycle()
+    val endpoint by viewModel.obEndpoint.collectAsStateWithLifecycle()
+    val apiKey by viewModel.obApiKey.collectAsStateWithLifecycle()
+    val maxCostCap by viewModel.obMaxCostCap.collectAsStateWithLifecycle()
+    val timeout by viewModel.obTimeout.collectAsStateWithLifecycle()
+    val hitlEnabled by viewModel.obHitlEnabled.collectAsStateWithLifecycle()
+    val isPinging by viewModel.isPingTesting.collectAsStateWithLifecycle()
+    val pingBadge by viewModel.pingSuccessBadge.collectAsStateWithLifecycle()
 
     var currentStep by remember { mutableStateOf(1) }
 
@@ -42,7 +47,7 @@ fun AgentOnboardingModal(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = SurfaceDark,
-        scrimColor = BackgroundDark.copy(alpha = 0.8f)
+        scrimColor = Color.Black.copy(alpha = 0.6f)
     ) {
         Column(
             modifier = Modifier
@@ -57,13 +62,13 @@ fun AgentOnboardingModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Agent Onboarding Wizard",
+                    text = stringResource(R.string.onboarding_title),
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 Text(
-                    text = "Step $currentStep of 4",
+                    text = stringResource(R.string.onboarding_step_count, currentStep),
                     color = CyanAccent,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
@@ -88,7 +93,7 @@ fun AgentOnboardingModal(
             when (currentStep) {
                 1 -> {
                     // Step 1: Provider selection
-                    Text(text = "1. Select Provider Integration", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.onboarding_step_provider), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     providers.forEach { p ->
@@ -100,15 +105,16 @@ fun AgentOnboardingModal(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
+                                .defaultMinSize(minHeight = 48.dp)
                                 .clickable {
-                                    viewModel.obProvider.value = p
-                                    viewModel.obEndpoint.value = when (p) {
+                                    val endpoint = when (p) {
                                         "OpenAI" -> "https://api.openai.com/v1/chat/completions"
                                         "Anthropic" -> "https://api.anthropic.com/v1/messages"
                                         "Google Gemini" -> "https://generativelanguage.googleapis.com/v1beta"
                                         "LangGraph" -> "https://agentos.internal/langgraph/v1"
                                         else -> "https://custom.endpoint.internal/v1/agent"
                                     }
+                                    viewModel.onObProviderChange(p, endpoint)
                                 }
                         ) {
                             Row(
@@ -125,14 +131,14 @@ fun AgentOnboardingModal(
 
                 2 -> {
                     // Step 2: Endpoint & API Key
-                    Text(text = "2. Endpoint & Credentials", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.onboarding_step_credentials), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { viewModel.obName.value = it },
-                        label = { Text("Agent Label / Name") },
-                        placeholder = { Text("e.g. FinanceBot-v2") },
+                        onValueChange = { viewModel.onObNameChange(it) },
+                        label = { Text(stringResource(R.string.onboarding_name_label)) },
+                        placeholder = { Text(stringResource(R.string.onboarding_name_placeholder)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyanAccent, unfocusedBorderColor = SurfaceBorderDark),
                         modifier = Modifier.fillMaxWidth().testTag("ob_agent_name_input")
@@ -142,8 +148,8 @@ fun AgentOnboardingModal(
 
                     OutlinedTextField(
                         value = endpoint,
-                        onValueChange = { viewModel.obEndpoint.value = it },
-                        label = { Text("Endpoint URL") },
+                        onValueChange = { viewModel.onObEndpointChange(it) },
+                        label = { Text(stringResource(R.string.onboarding_endpoint)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyanAccent, unfocusedBorderColor = SurfaceBorderDark),
                         modifier = Modifier.fillMaxWidth().testTag("ob_endpoint_input")
@@ -153,8 +159,8 @@ fun AgentOnboardingModal(
 
                     OutlinedTextField(
                         value = apiKey,
-                        onValueChange = { viewModel.obApiKey.value = it },
-                        label = { Text("API Key") },
+                        onValueChange = { viewModel.onObApiKeyChange(it) },
+                        label = { Text(stringResource(R.string.onboarding_api_key)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyanAccent, unfocusedBorderColor = SurfaceBorderDark),
                         modifier = Modifier.fillMaxWidth().testTag("ob_api_key_input")
@@ -173,9 +179,9 @@ fun AgentOnboardingModal(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = "Secure Key", tint = StatusOnline, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.Lock, contentDescription = stringResource(R.string.cd_secure_key), tint = StatusOnline, modifier = Modifier.size(16.dp))
                             Text(
-                                text = "Key encrypted locally via Secure Enclave. Never sent to AgentOS servers.",
+                                text = stringResource(R.string.settings_key_note),
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -185,11 +191,11 @@ fun AgentOnboardingModal(
 
                 3 -> {
                     // Step 3: Capability Auto-Discovery
-                    Text(text = "3. Capability Discovery & Ping Test", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.onboarding_step_ping), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "AgentOS will execute an automated ping test to discover endpoint tools, model limits, and response latency.",
+                        text = stringResource(R.string.onboarding_ping_body),
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -201,16 +207,16 @@ fun AgentOnboardingModal(
                         enabled = !isPinging,
                         colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth().height(44.dp).testTag("ping_test_button")
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("ping_test_button")
                     ) {
                         if (isPinging) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = BackgroundDark, strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = OnStatusFill, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Testing Endpoint Connection...", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.onboarding_ping_running), color = OnStatusFill, fontWeight = FontWeight.Bold)
                         } else {
-                            Icon(imageVector = Icons.Default.NetworkCheck, contentDescription = "Ping Test", tint = BackgroundDark)
+                            Icon(imageVector = Icons.Default.NetworkCheck, contentDescription = null, tint = OnStatusFill)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Run Auto-Discovery Ping Test", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.onboarding_ping_run), color = OnStatusFill, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -226,7 +232,7 @@ fun AgentOnboardingModal(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Discovery Success", tint = StatusOnline)
+                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = stringResource(R.string.cd_discovery), tint = StatusOnline)
                                 Text(text = pingBadge!!, color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 12.sp)
                             }
                         }
@@ -235,13 +241,13 @@ fun AgentOnboardingModal(
 
                 4 -> {
                     // Step 4: Hard Caps & Governance Setup
-                    Text(text = "4. Hard Caps & Safety Governance", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.onboarding_step_caps), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = maxCostCap,
-                        onValueChange = { viewModel.obMaxCostCap.value = it },
-                        label = { Text("Daily Hard Cost Cap ($ USD)") },
+                        onValueChange = { viewModel.onObMaxCostCapChange(it) },
+                        label = { Text(stringResource(R.string.onboarding_cost_label)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyanAccent, unfocusedBorderColor = SurfaceBorderDark),
                         modifier = Modifier.fillMaxWidth()
@@ -251,8 +257,8 @@ fun AgentOnboardingModal(
 
                     OutlinedTextField(
                         value = timeout,
-                        onValueChange = { viewModel.obTimeout.value = it },
-                        label = { Text("Execution Timeout (seconds)") },
+                        onValueChange = { viewModel.onObTimeoutChange(it) },
+                        label = { Text(stringResource(R.string.onboarding_timeout_label)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyanAccent, unfocusedBorderColor = SurfaceBorderDark),
                         modifier = Modifier.fillMaxWidth()
@@ -266,12 +272,12 @@ fun AgentOnboardingModal(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(text = "Require Human-in-the-Loop (HITL)", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            Text(text = "Gates high-risk actions before execution", color = TextSecondary, fontSize = 11.sp)
+                            Text(text = stringResource(R.string.onboarding_hitl), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(text = stringResource(R.string.onboarding_hitl_hint), color = TextSecondary, fontSize = 11.sp)
                         }
                         Switch(
                             checked = hitlEnabled,
-                            onCheckedChange = { viewModel.obHitlEnabled.value = it },
+                            onCheckedChange = { viewModel.onObHitlEnabledChange(it) },
                             colors = SwitchDefaults.colors(checkedThumbColor = CyanAccent)
                         )
                     }
@@ -291,7 +297,7 @@ fun AgentOnboardingModal(
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Back", color = TextSecondary)
+                        Text(stringResource(R.string.action_back), color = TextSecondary)
                     }
                 }
 
@@ -308,7 +314,7 @@ fun AgentOnboardingModal(
                     modifier = Modifier.weight(1f).height(48.dp).testTag("ob_next_deploy_button")
                 ) {
                     Text(
-                        text = if (currentStep == 4) "Deploy Agent" else "Continue",
+                        text = if (currentStep == 4) stringResource(R.string.action_deploy) else stringResource(R.string.action_continue),
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )

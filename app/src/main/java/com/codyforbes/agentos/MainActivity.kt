@@ -3,15 +3,26 @@ package com.codyforbes.agentos
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codyforbes.agentos.data.AgentOSDatabase
-import com.codyforbes.agentos.data.AgentOSRepository
 import com.codyforbes.agentos.ui.components.AgentOSBottomNavigation
 import com.codyforbes.agentos.ui.components.GlobalHeader
 import com.codyforbes.agentos.ui.components.HitlDecisionSheet
@@ -23,8 +34,7 @@ import com.codyforbes.agentos.viewmodel.AgentOSViewModelFactory
 class MainActivity : ComponentActivity() {
 
     private val viewModel: AgentOSViewModel by viewModels {
-        val db = AgentOSDatabase.getDatabase(applicationContext)
-        val repository = AgentOSRepository(db, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO))
+        val repository = AgentOSDatabase.getRepository(applicationContext)
         AgentOSViewModelFactory(application, repository)
     }
 
@@ -34,21 +44,36 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AgentOSTheme {
-                val activeTab by viewModel.activeTab.collectAsState()
-                val activeTasks by viewModel.activeTaskCount.collectAsState()
-                val hitlCount by viewModel.awaitingHitlCount.collectAsState()
-                val dailyBurn by viewModel.totalDailyBurnUSD.collectAsState()
-                val settings by viewModel.settings.collectAsState()
-                val toastMsg by viewModel.toastMessage.collectAsState()
+                val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
+                val activeTasks by viewModel.activeTaskCount.collectAsStateWithLifecycle()
+                val hitlCount by viewModel.awaitingHitlCount.collectAsStateWithLifecycle()
+                val dailyBurn by viewModel.totalDailyBurnUSD.collectAsStateWithLifecycle()
+                val settings by viewModel.settings.collectAsStateWithLifecycle()
+                val toastMsg by viewModel.toastMessage.collectAsStateWithLifecycle()
 
-                val agents by viewModel.agents.collectAsState()
-                val selectedAgentDetail by viewModel.selectedAgentDetail.collectAsState()
-                val selectedTaskInspector by viewModel.selectedTaskInspector.collectAsState()
-                val showOnboardingWizard by viewModel.showOnboardingWizard.collectAsState()
-                val showDelegationModal by viewModel.showDelegationModal.collectAsState()
-                val showHitlTask by viewModel.showHitlDecisionTask.collectAsState()
+                val agents by viewModel.agents.collectAsStateWithLifecycle()
+                val selectedAgentDetail by viewModel.selectedAgentDetail.collectAsStateWithLifecycle()
+                val selectedTaskInspector by viewModel.selectedTaskInspector.collectAsStateWithLifecycle()
+                val showOnboardingWizard by viewModel.showOnboardingWizard.collectAsStateWithLifecycle()
+                val showDelegationModal by viewModel.showDelegationModal.collectAsStateWithLifecycle()
+                val showHitlTask by viewModel.showHitlDecisionTask.collectAsStateWithLifecycle()
 
                 val isKillSwitchEngaged = settings?.emergencyKillSwitchEngaged == true
+                val modalOpen = showHitlTask != null ||
+                    selectedTaskInspector != null ||
+                    showDelegationModal ||
+                    selectedAgentDetail != null ||
+                    showOnboardingWizard
+
+                BackHandler(enabled = modalOpen) {
+                    when {
+                        showHitlTask != null -> viewModel.closeHitlDecision()
+                        selectedTaskInspector != null -> viewModel.closeTaskInspector()
+                        showDelegationModal -> viewModel.closeDelegationModal()
+                        selectedAgentDetail != null -> viewModel.closeAgentDetail()
+                        showOnboardingWizard -> viewModel.closeOnboardingWizard()
+                    }
+                }
 
                 // Handle Toast alerts
                 LaunchedEffect(toastMsg) {
@@ -82,13 +107,21 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.TopCenter,
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .widthIn(max = 840.dp)
+                                .fillMaxWidth()
+                                .fillMaxHeight(),
+                        ) {
                         when (activeTab) {
                             0 -> AgentsScreen(viewModel = viewModel)
                             1 -> TasksScreen(viewModel = viewModel)
                             2 -> AnalyticsScreen(viewModel = viewModel)
                             3 -> SettingsScreen(viewModel = viewModel)
+                            else -> AgentsScreen(viewModel = viewModel)
                         }
 
                         // Onboarding Wizard Modal
@@ -136,6 +169,7 @@ class MainActivity : ComponentActivity() {
                                 onReject = { viewModel.rejectHitl(task.id) },
                                 onDismiss = { viewModel.closeHitlDecision() }
                             )
+                        }
                         }
                     }
                 }

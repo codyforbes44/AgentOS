@@ -1,9 +1,13 @@
 package com.codyforbes.agentos.data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "agents")
+@Entity(
+    tableName = "agents",
+    indices = [Index(value = ["status"], name = "index_agents_status")],
+)
 data class AgentEntity(
     @PrimaryKey val id: String,
     val name: String,
@@ -22,7 +26,13 @@ data class AgentEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "task_executions")
+@Entity(
+    tableName = "task_executions",
+    indices = [
+        Index(value = ["agentId"], name = "index_task_executions_agentId"),
+        Index(value = ["status"], name = "index_task_executions_status"),
+    ],
+)
 data class TaskExecutionEntity(
     @PrimaryKey val id: String,
     val title: String,
@@ -45,7 +55,13 @@ data class TaskExecutionEntity(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "analytics_metrics")
+@Entity(
+    tableName = "analytics_metrics",
+    indices = [
+        Index(value = ["timestamp"], name = "index_analytics_metrics_timestamp"),
+        Index(value = ["agentId"], name = "index_analytics_metrics_agentId"),
+    ],
+)
 data class AnalyticsMetricEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long,

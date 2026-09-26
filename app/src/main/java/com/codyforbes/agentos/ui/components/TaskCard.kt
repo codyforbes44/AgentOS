@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.components
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -136,7 +139,7 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Step ${task.currentStepIndex} of ${task.totalSteps}",
+                        text = stringResource(R.string.task_step_progress, task.currentStepIndex, task.totalSteps),
                         color = TextMuted,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
@@ -183,12 +186,12 @@ fun TaskCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
-                                contentDescription = "Intervention Required",
+                                contentDescription = stringResource(R.string.cd_intervention),
                                 tint = StatusApprovalRequired,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Human Intervention Required",
+                                text = stringResource(R.string.task_intervention_required),
                                 color = StatusApprovalRequired,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
@@ -208,12 +211,12 @@ fun TaskCard(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .height(32.dp)
+                                .heightIn(min = 48.dp)
                                 .testTag("review_hitl_button")
                         ) {
                             Text(
-                                text = "Review & Approve",
-                                color = BackgroundDark,
+                                text = stringResource(R.string.task_review_approve),
+                                color = OnStatusFill,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp
                             )

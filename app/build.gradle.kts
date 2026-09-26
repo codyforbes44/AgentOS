@@ -134,6 +134,10 @@ android {
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
+ksp {
+  arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 // The secrets plugin is told to ignore GEMINI_API_KEY (below). This is the only path that
 // copies a real key into the release BuildConfig, and only when the opt-in is explicit.
 androidComponents {

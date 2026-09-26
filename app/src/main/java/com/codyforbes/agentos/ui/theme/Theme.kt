@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -11,80 +12,143 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 @Immutable
 data class AgentOSColors(
+    val background: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val surfaceBorder: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
     val statusOnline: Color = StatusOnline,
     val statusExecuting: Color = StatusExecuting,
     val statusApprovalRequired: Color = StatusApprovalRequired,
     val statusError: Color = StatusError,
     val statusRateLimited: Color = StatusRateLimited,
     val statusOffline: Color = StatusOffline,
-    val backgroundDark: Color = BackgroundDark,
-    val surfaceDark: Color = SurfaceDark,
-    val surfaceVariantDark: Color = SurfaceVariantDark,
-    val surfaceBorderDark: Color = SurfaceBorderDark,
     val cyanAccent: Color = CyanAccent,
     val indigoAccent: Color = IndigoAccent,
-    val textPrimary: Color = TextPrimary,
-    val textSecondary: Color = TextSecondary,
-    val textMuted: Color = TextMuted
 )
 
-val LocalAgentOSColors = staticCompositionLocalOf { AgentOSColors() }
+private val DarkAgentOSColors = AgentOSColors(
+    background = PaletteDarkBackground,
+    surface = PaletteDarkSurface,
+    surfaceVariant = PaletteDarkSurfaceVariant,
+    surfaceBorder = PaletteDarkBorder,
+    textPrimary = PaletteDarkTextPrimary,
+    textSecondary = PaletteDarkTextSecondary,
+    textMuted = PaletteDarkTextMuted,
+)
 
-private val AgentOSColorScheme = darkColorScheme(
+private val LightAgentOSColors = AgentOSColors(
+    background = PaletteLightBackground,
+    surface = PaletteLightSurface,
+    surfaceVariant = PaletteLightSurfaceVariant,
+    surfaceBorder = PaletteLightBorder,
+    textPrimary = PaletteLightTextPrimary,
+    textSecondary = PaletteLightTextSecondary,
+    textMuted = PaletteLightTextMuted,
+)
+
+val LocalAgentOSColors = staticCompositionLocalOf { DarkAgentOSColors }
+
+private val DarkScheme = darkColorScheme(
     primary = StatusExecuting,
-    onPrimary = TextPrimary,
-    primaryContainer = SurfaceVariantDark,
-    onPrimaryContainer = TextPrimary,
+    onPrimary = OnBrightFill,
+    primaryContainer = PaletteDarkSurfaceVariant,
+    onPrimaryContainer = PaletteDarkTextPrimary,
     secondary = CyanAccent,
-    onSecondary = TextPrimary,
-    background = BackgroundDark,
-    onBackground = TextPrimary,
-    surface = SurfaceDark,
-    onSurface = TextPrimary,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = TextSecondary,
+    onSecondary = OnStatusFill,
+    background = PaletteDarkBackground,
+    onBackground = PaletteDarkTextPrimary,
+    surface = PaletteDarkSurface,
+    onSurface = PaletteDarkTextPrimary,
+    surfaceVariant = PaletteDarkSurfaceVariant,
+    onSurfaceVariant = PaletteDarkTextSecondary,
     error = StatusError,
-    onError = TextPrimary,
-    outline = SurfaceBorderDark
+    onError = OnBrightFill,
+    outline = PaletteDarkBorder,
 )
+
+private val LightScheme = lightColorScheme(
+    primary = StatusExecuting,
+    onPrimary = OnBrightFill,
+    primaryContainer = PaletteLightSurfaceVariant,
+    onPrimaryContainer = PaletteLightTextPrimary,
+    secondary = CyanAccent,
+    onSecondary = OnStatusFill,
+    background = PaletteLightBackground,
+    onBackground = PaletteLightTextPrimary,
+    surface = PaletteLightSurface,
+    onSurface = PaletteLightTextPrimary,
+    surfaceVariant = PaletteLightSurfaceVariant,
+    onSurfaceVariant = PaletteLightTextSecondary,
+    error = StatusError,
+    onError = OnBrightFill,
+    outline = PaletteLightBorder,
+)
+
+val BackgroundDark: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.background
+
+val SurfaceDark: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.surface
+
+val SurfaceVariantDark: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.surfaceVariant
+
+val SurfaceBorderDark: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.surfaceBorder
+
+val TextPrimary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.textPrimary
+
+val TextSecondary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.textSecondary
+
+val TextMuted: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAgentOSColors.current.textMuted
 
 @Composable
 fun AgentOSTheme(
-    colors: AgentOSColors = AgentOSColors(),
-    content: @Composable () -> Unit
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
 ) {
+    val colors = if (darkTheme) DarkAgentOSColors else LightAgentOSColors
+    val scheme = if (darkTheme) DarkScheme else LightScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = BackgroundDark.toArgb()
-            window.navigationBarColor = SurfaceDark.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !darkTheme
+            controller.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
-    CompositionLocalProvider(
-        LocalAgentOSColors provides colors
-    ) {
+    CompositionLocalProvider(LocalAgentOSColors provides colors) {
         MaterialTheme(
-            colorScheme = AgentOSColorScheme,
+            colorScheme = scheme,
             typography = Typography,
-            content = content
+            content = content,
         )
     }
 }
-
-object AgentOSTheme {
-    val statusColors: AgentOSColors
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalAgentOSColors.current
-}
-

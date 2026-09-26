@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.components
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,21 +63,21 @@ fun GlobalHeader(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Shield,
-                            contentDescription = "AgentOS Logo",
+                            contentDescription = null,
                             tint = StatusExecuting,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                     Column {
                         Text(
-                            text = "AgentOS",
+                            text = stringResource(R.string.app_name),
                             color = TextPrimary,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 22.sp,
                             letterSpacing = (-0.8).sp
                         )
                         Text(
-                            text = "v1.0.4-STABLE / SYSTEM_ACTIVE",
+                            text = stringResource(R.string.header_version),
                             color = TextSecondary,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -105,12 +108,12 @@ fun GlobalHeader(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
-                                    contentDescription = "HITL Required",
+                                    contentDescription = stringResource(R.string.cd_hitl_required),
                                     tint = StatusApprovalRequired,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
-                                    text = "$hitlCount GATE",
+                                    text = stringResource(R.string.header_gate_count, hitlCount),
                                     color = StatusApprovalRequired,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp
@@ -124,13 +127,13 @@ fun GlobalHeader(
                         onClick = onKillSwitchClick,
                         modifier = Modifier
                             .testTag("kill_switch_button")
-                            .size(36.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(if (isKillSwitchEngaged) StatusError else SurfaceVariantDark)
                     ) {
                         Icon(
                             imageVector = Icons.Default.PowerSettingsNew,
-                            contentDescription = "Emergency Kill Switch",
+                            contentDescription = stringResource(R.string.settings_kill_title),
                             tint = if (isKillSwitchEngaged) TextPrimary else StatusError,
                             modifier = Modifier.size(20.dp)
                         )
