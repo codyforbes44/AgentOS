@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.components
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -9,6 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
@@ -16,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codyforbes.agentos.data.TaskExecutionEntity
+import com.codyforbes.agentos.ui.formatUsd
 import com.codyforbes.agentos.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +34,7 @@ fun HitlDecisionSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = SurfaceDark,
-        scrimColor = BackgroundDark.copy(alpha = 0.8f),
+        scrimColor = Color.Black.copy(alpha = 0.6f),
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -62,7 +67,7 @@ fun HitlDecisionSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Gavel,
-                        contentDescription = "Human Intervention Gate",
+                        contentDescription = stringResource(R.string.cd_hitl_gate),
                         tint = StatusApprovalRequired,
                         modifier = Modifier.size(22.dp)
                     )
@@ -70,13 +75,13 @@ fun HitlDecisionSheet(
 
                 Column {
                     Text(
-                        text = "Human-in-the-Loop Gate Required",
+                        text = stringResource(R.string.hitl_title),
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp
                     )
                     Text(
-                        text = "Authorization needed for high-risk action",
+                        text = stringResource(R.string.hitl_subtitle),
                         color = StatusApprovalRequired,
                         fontSize = 12.sp
                     )
@@ -94,21 +99,21 @@ fun HitlDecisionSheet(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "REQUESTED ACTION",
+                        text = stringResource(R.string.hitl_requested_action),
                         color = TextMuted,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = task.hitlReason.ifBlank { "Agent requests write permission to update records in database." },
+                        text = task.hitlReason.ifBlank { stringResource(R.string.hitl_default_reason) },
                         color = TextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    Divider(color = SurfaceBorderDark)
+                    HorizontalDivider(color = SurfaceBorderDark)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
@@ -116,16 +121,16 @@ fun HitlDecisionSheet(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text(text = "TARGET AGENT", color = TextMuted, fontSize = 10.sp)
+                            Text(text = stringResource(R.string.hitl_target_agent), color = TextMuted, fontSize = 10.sp)
                             Text(text = task.agentName, color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                         Column {
-                            Text(text = "TASK ID", color = TextMuted, fontSize = 10.sp)
+                            Text(text = stringResource(R.string.hitl_task_id), color = TextMuted, fontSize = 10.sp)
                             Text(text = "#${task.id}", color = TextSecondary, fontWeight = FontWeight.Medium, fontSize = 13.sp)
                         }
                         Column {
-                            Text(text = "ACCUMULATED COST", color = TextMuted, fontSize = 10.sp)
-                            Text(text = "$${String.format("%.2f", task.actualCostUSD)}", color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(text = stringResource(R.string.hitl_accumulated_cost), color = TextMuted, fontSize = 10.sp)
+                            Text(text = "$${formatUsd(task.actualCostUSD)}", color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -145,12 +150,12 @@ fun HitlDecisionSheet(
             ) {
                 Icon(
                     imageVector = Icons.Default.VerifiedUser,
-                    contentDescription = "Audit Protection",
+                    contentDescription = stringResource(R.string.cd_audit),
                     tint = StatusOnline,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = "Your decision will be cryptographically timestamped in the audit log.",
+                    text = stringResource(R.string.hitl_audit_note),
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
@@ -175,11 +180,11 @@ fun HitlDecisionSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Reject",
+                        contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Reject Action", fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.hitl_reject), fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -193,12 +198,12 @@ fun HitlDecisionSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
-                        contentDescription = "Approve",
-                        tint = BackgroundDark,
+                        contentDescription = null,
+                        tint = OnStatusFill,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Approve Action", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.hitl_approve), color = OnStatusFill, fontWeight = FontWeight.Bold)
                 }
             }
 

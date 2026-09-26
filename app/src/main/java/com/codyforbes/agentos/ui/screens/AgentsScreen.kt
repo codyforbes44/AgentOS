@@ -1,5 +1,9 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,9 +34,9 @@ fun AgentsScreen(
     viewModel: AgentOSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val agents by viewModel.agents.collectAsState()
-    val statusFilter by viewModel.agentStatusFilter.collectAsState()
-    val providerFilter by viewModel.agentProviderFilter.collectAsState()
+    val agents by viewModel.agents.collectAsStateWithLifecycle()
+    val statusFilter by viewModel.agentStatusFilter.collectAsStateWithLifecycle()
+    val providerFilter by viewModel.agentProviderFilter.collectAsStateWithLifecycle()
 
     val filteredAgents = remember(agents, statusFilter, providerFilter) {
         agents.filter { ag ->
@@ -62,14 +66,14 @@ fun AgentsScreen(
             ) {
                 Column {
                     Text(
-                        text = "AGENT FLEET",
+                        text = stringResource(R.string.agents_title),
                         color = TextPrimary,
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
                         letterSpacing = (-1.0).sp
                     )
                     Text(
-                        text = "${agents.size} CONNECTED NODES",
+                        text = stringResource(R.string.agents_connected_count, agents.size),
                         color = TextSecondary,
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -84,12 +88,12 @@ fun AgentsScreen(
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                     modifier = Modifier
-                        .height(40.dp)
-                        .testTag("connect_agent_button")
+                    .heightIn(min = 48.dp)
+                    .testTag("connect_agent_button")
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "CONNECT AGENT", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 0.5.sp)
+                    Text(text = stringResource(R.string.agents_connect), fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 0.5.sp)
                 }
             }
 
@@ -101,13 +105,15 @@ fun AgentsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 val statusFilters = listOf("ALL", "ONLINE_IDLE", "EXECUTING", "AWAITING_APPROVAL", "RATE_LIMITED", "ERROR")
-                items(statusFilters) { filter ->
+                items(statusFilters, key = { it }) { filter ->
                     val isSel = statusFilter == filter
                     Surface(
                         color = if (isSel) StatusExecuting else SurfaceDark,
                         shape = RoundedCornerShape(20.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) StatusExecuting else SurfaceBorderDark),
-                        modifier = Modifier.clickable { viewModel.agentStatusFilter.value = filter }
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .clickable { viewModel.setAgentStatusFilter(filter) }
                     ) {
                         Text(
                             text = filter.replace("_", " "),
@@ -124,9 +130,9 @@ fun AgentsScreen(
 
             if (filteredAgents.isEmpty()) {
                 EmptyState(
-                    title = "No Agents Connected",
-                    description = "Connect an agent via API key or custom endpoint to start delegating tasks securely.",
-                    actionLabel = "+ Connect First Agent",
+                    title = stringResource(R.string.empty_agents_title),
+                    description = stringResource(R.string.empty_agents_description),
+                    actionLabel = stringResource(R.string.empty_agents_action),
                     onActionClick = { viewModel.openOnboardingWizard() },
                     modifier = Modifier.weight(1f)
                 )
@@ -160,12 +166,12 @@ fun AgentsScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Connect Agent",
+                contentDescription = null,
                 tint = TextPrimary
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Connect Agent",
+                text = stringResource(R.string.agents_connect_fab),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 13.sp,
                 letterSpacing = 0.5.sp,

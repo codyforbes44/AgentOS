@@ -13,10 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.codyforbes.agentos.R
 import com.codyforbes.agentos.ui.theme.*
 
 /**
@@ -24,9 +27,9 @@ import com.codyforbes.agentos.ui.theme.*
  */
 @Composable
 fun EmptyState(
-    title: String = "No Agents Connected",
-    description: String = "Connect an agent via API key or custom endpoint to start delegating tasks securely.",
-    actionLabel: String = "+ Connect First Agent",
+    title: String = stringResource(R.string.empty_agents_title),
+    description: String = stringResource(R.string.empty_agents_description),
+    actionLabel: String = stringResource(R.string.empty_agents_action),
     icon: ImageVector = Icons.Default.SmartToy,
     onActionClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -57,7 +60,7 @@ fun EmptyState(
                 ) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = title,
+                        contentDescription = null,
                         tint = CyanAccent,
                         modifier = Modifier.size(32.dp)
                     )
@@ -90,16 +93,26 @@ fun EmptyState(
                     colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                    modifier = Modifier.testTag(actionTestTag)
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag(actionTestTag)
                 ) {
                     Text(
                         text = actionLabel,
-                        color = BackgroundDark,
+                        color = OnStatusFill,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 13.sp
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Empty state")
+@Composable
+private fun EmptyStatePreview() {
+    AgentOSTheme {
+        EmptyState(onActionClick = {})
     }
 }

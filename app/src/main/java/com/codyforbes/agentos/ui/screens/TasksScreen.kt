@@ -1,5 +1,9 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,8 +31,8 @@ fun TasksScreen(
     viewModel: AgentOSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val tasks by viewModel.tasks.collectAsState()
-    val taskFilter by viewModel.taskStatusFilter.collectAsState()
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val taskFilter by viewModel.taskStatusFilter.collectAsStateWithLifecycle()
 
     val filteredTasks = remember(tasks, taskFilter) {
         tasks.filter { t ->
@@ -58,14 +62,17 @@ fun TasksScreen(
         ) {
             Column {
                 Text(
-                    text = "TASK ORCHESTRATION",
+                    text = stringResource(R.string.tasks_title),
                     color = TextPrimary,
                     fontWeight = FontWeight.Black,
                     fontSize = 24.sp,
                     letterSpacing = (-1.0).sp
                 )
                 Text(
-                    text = "${tasks.count { it.status == "RUNNING" || it.status == "AWAITING_HITL" }} ACTIVE EXECUTIONS",
+                    text = stringResource(
+                        R.string.tasks_active_count,
+                        tasks.count { it.status == "RUNNING" || it.status == "AWAITING_HITL" },
+                    ),
                     color = TextSecondary,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -80,12 +87,12 @@ fun TasksScreen(
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 modifier = Modifier
-                    .height(40.dp)
+                    .heightIn(min = 48.dp)
                     .testTag("delegate_task_button")
             ) {
-                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Delegate", modifier = Modifier.size(18.dp))
+                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "DELEGATE TASK", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 0.5.sp)
+                Text(text = stringResource(R.string.tasks_delegate), fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, letterSpacing = 0.5.sp)
             }
         }
 
@@ -97,7 +104,7 @@ fun TasksScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             val filters = listOf("ALL", "ACTIVE", "AWAITING_HITL", "COMPLETED", "FAILED")
-            items(filters) { filter ->
+            items(filters, key = { it }) { filter ->
                 val isSel = taskFilter == filter
                 val isHitlTab = filter == "AWAITING_HITL"
                 val hitlCount = tasks.count { it.status == "AWAITING_HITL" }
@@ -106,7 +113,9 @@ fun TasksScreen(
                     color = if (isSel) (if (isHitlTab) StatusApprovalRequired else StatusExecuting) else SurfaceDark,
                     shape = RoundedCornerShape(20.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) (if (isHitlTab) StatusApprovalRequired else StatusExecuting) else SurfaceBorderDark),
-                    modifier = Modifier.clickable { viewModel.taskStatusFilter.value = filter }
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .clickable { viewModel.setTaskStatusFilter(filter) }
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -114,14 +123,14 @@ fun TasksScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = if (filter == "AWAITING_HITL") "HITL GATES" else filter,
-                            color = if (isSel) (if (isHitlTab) BackgroundDark else TextPrimary) else TextSecondary,
+                            text = if (filter == "AWAITING_HITL") stringResource(R.string.filter_hitl_gates) else filter,
+                            color = if (isSel) (if (isHitlTab) OnStatusFill else TextPrimary) else TextSecondary,
                             fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 11.sp
                         )
                         if (isHitlTab && hitlCount > 0) {
                             Badge(containerColor = StatusApprovalRequired) {
-                                Text(text = "$hitlCount", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                                Text(text = "$hitlCount", color = OnStatusFill, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -139,7 +148,7 @@ fun TasksScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No tasks matching filter criteria.",
+                    text = stringResource(R.string.tasks_empty),
                     color = TextSecondary,
                     fontSize = 14.sp
                 )

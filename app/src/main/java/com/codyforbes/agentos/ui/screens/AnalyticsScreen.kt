@@ -1,5 +1,9 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +27,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.codyforbes.agentos.ui.formatUsd
 import com.codyforbes.agentos.ui.theme.*
 import com.codyforbes.agentos.viewmodel.AgentOSViewModel
 
@@ -31,12 +36,15 @@ fun AnalyticsScreen(
     viewModel: AgentOSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val timeRange by viewModel.analyticsTimeRange.collectAsState()
-    val metrics by viewModel.metrics.collectAsState()
-    val totalBurnUSD by viewModel.totalDailyBurnUSD.collectAsState()
+    val timeRange by viewModel.analyticsTimeRange.collectAsStateWithLifecycle()
+    val metrics by viewModel.metrics.collectAsStateWithLifecycle()
+    val totalBurnUSD by viewModel.totalDailyBurnUSD.collectAsStateWithLifecycle()
 
     val clipboardManager = LocalClipboardManager.current
     var showExportToast by remember { mutableStateOf<String?>(null) }
+    val copiedCsv = stringResource(R.string.analytics_copied_csv)
+    val copiedJson = stringResource(R.string.analytics_copied_json)
+    val copiedPdf = stringResource(R.string.analytics_copied_pdf)
 
     Column(
         modifier = modifier
@@ -55,14 +63,14 @@ fun AnalyticsScreen(
         ) {
             Column {
                 Text(
-                    text = "OBSERVABILITY",
+                    text = stringResource(R.string.analytics_title),
                     color = TextPrimary,
                     fontWeight = FontWeight.Black,
                     fontSize = 24.sp,
                     letterSpacing = (-1.0).sp
                 )
                 Text(
-                    text = "REAL-TIME TELEMETRY & COST CONTROL",
+                    text = stringResource(R.string.analytics_subtitle),
                     color = TextSecondary,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -79,7 +87,9 @@ fun AnalyticsScreen(
                         color = if (isSel) StatusExecuting else SurfaceDark,
                         shape = RoundedCornerShape(8.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) StatusExecuting else SurfaceBorderDark),
-                        modifier = Modifier.clickable { viewModel.analyticsTimeRange.value = range }
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .clickable { viewModel.setAnalyticsTimeRange(range) }
                     ) {
                         Text(
                             text = range,
@@ -105,7 +115,7 @@ fun AnalyticsScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "ESTIMATED DAILY BURN",
+                    text = stringResource(R.string.analytics_estimated_daily),
                     color = TextSecondary,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -118,14 +128,14 @@ fun AnalyticsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "$${String.format("%.2f", totalBurnUSD)}",
+                        text = "$${formatUsd(totalBurnUSD)}",
                         color = TextPrimary,
                         fontWeight = FontWeight.Black,
                         fontSize = 42.sp,
                         letterSpacing = (-1.5).sp
                     )
                     Text(
-                        text = "/ 24h",
+                        text = stringResource(R.string.analytics_window),
                         color = CyanAccent,
                         fontWeight = FontWeight.Bold,
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -135,7 +145,7 @@ fun AnalyticsScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Divider(color = SurfaceVariantDark)
+                HorizontalDivider(color = SurfaceVariantDark)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Hero Substats Row
@@ -144,16 +154,16 @@ fun AnalyticsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text(text = "INPUT TOKENS", color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                        Text(text = "1.24M", color = TextPrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Text(text = stringResource(R.string.analytics_input_tokens), color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.analytics_input_value), color = TextPrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     }
                     Column {
-                        Text(text = "OUTPUT TOKENS", color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                        Text(text = "184K", color = TextPrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Text(text = stringResource(R.string.analytics_output_tokens), color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.analytics_output_value), color = TextPrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     }
                     Column {
-                        Text(text = "REASONING", color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                        Text(text = "410K", color = CyanAccent, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Text(text = stringResource(R.string.analytics_reasoning), color = TextMuted, fontSize = 9.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.analytics_reasoning_value), color = CyanAccent, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     }
                 }
             }
@@ -174,8 +184,8 @@ fun AnalyticsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Token Consumption & Cost Burn", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    Text(text = "Total Burn: $${String.format("%.2f", totalBurnUSD)}", color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(text = stringResource(R.string.analytics_chart_title), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(text = stringResource(R.string.analytics_total_burn_value, formatUsd(totalBurnUSD)), color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -240,12 +250,12 @@ fun AnalyticsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Insights", tint = CyanAccent)
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = stringResource(R.string.cd_insights), tint = CyanAccent)
                 Column {
-                    Text(text = "PLAIN-LANGUAGE TREND INSIGHTS", color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    Text(text = stringResource(R.string.analytics_insights_title), color = CyanAccent, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Token efficiency improved by 14% over 7 days due to prompt optimization on DataExtractionAgent.",
+                        text = stringResource(R.string.analytics_insights_body),
                         color = TextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -257,7 +267,7 @@ fun AnalyticsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Reliability Metrics Grid
-        Text(text = "Reliability & Health Metrics", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = stringResource(R.string.analytics_reliability), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
@@ -271,8 +281,8 @@ fun AnalyticsScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "LATENCY P95", color = TextMuted, fontSize = 10.sp)
-                    Text(text = "1,840ms", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.analytics_latency), color = TextMuted, fontSize = 10.sp)
+                    Text(text = stringResource(R.string.analytics_latency_value), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
 
@@ -283,8 +293,8 @@ fun AnalyticsScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "SUCCESS RATE", color = TextMuted, fontSize = 10.sp)
-                    Text(text = "99.2%", color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.analytics_success), color = TextMuted, fontSize = 10.sp)
+                    Text(text = stringResource(R.string.analytics_success_value), color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
 
@@ -295,8 +305,8 @@ fun AnalyticsScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "FAILURE RATE", color = TextMuted, fontSize = 10.sp)
-                    Text(text = "0.8%", color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = stringResource(R.string.analytics_error_rate), color = TextMuted, fontSize = 10.sp)
+                    Text(text = stringResource(R.string.analytics_error_value), color = StatusOnline, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }
@@ -304,7 +314,7 @@ fun AnalyticsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Export & Reporting Engine Section
-        Text(text = "Export & Reporting Engine", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = stringResource(R.string.analytics_export_title), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
@@ -315,46 +325,46 @@ fun AnalyticsScreen(
                 onClick = {
                     val csv = viewModel.exportTelemetryReport("CSV")
                     clipboardManager.setText(AnnotatedString(csv))
-                    showExportToast = "CSV Telemetry Report copied to clipboard!"
+                    showExportToast = copiedCsv
                 },
                 shape = RoundedCornerShape(8.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorderDark),
                 modifier = Modifier
                     .weight(1f)
-                    .height(42.dp)
+                    .heightIn(min = 48.dp)
                     .testTag("export_csv_button")
             ) {
-                Text("Export CSV", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.analytics_export_csv), color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
 
             OutlinedButton(
                 onClick = {
                     val json = viewModel.exportTelemetryReport("JSON")
                     clipboardManager.setText(AnnotatedString(json))
-                    showExportToast = "JSON Telemetry Report copied to clipboard!"
+                    showExportToast = copiedJson
                 },
                 shape = RoundedCornerShape(8.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorderDark),
                 modifier = Modifier
                     .weight(1f)
-                    .height(42.dp)
+                    .heightIn(min = 48.dp)
                     .testTag("export_json_button")
             ) {
-                Text("Export JSON", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.analytics_export_json), color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
 
             Button(
                 onClick = {
-                    showExportToast = "PDF Executive Summary Report Generated!"
+                    showExportToast = copiedPdf
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .weight(1f)
-                    .height(42.dp)
+                    .heightIn(min = 48.dp)
                     .testTag("export_pdf_button")
             ) {
-                Text("PDF Report", color = BackgroundDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.analytics_export_pdf), color = OnStatusFill, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 

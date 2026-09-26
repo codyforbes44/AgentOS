@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.screens
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -7,10 +10,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
@@ -33,7 +38,7 @@ fun TaskInspectorModal(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = SurfaceDark,
-        scrimColor = BackgroundDark.copy(alpha = 0.8f)
+        scrimColor = Color.Black.copy(alpha = 0.6f)
     ) {
         Column(
             modifier = Modifier
@@ -56,7 +61,7 @@ fun TaskInspectorModal(
                         fontSize = 18.sp
                     )
                     Text(
-                        text = "Task #${task.id} • ${task.agentName}",
+                        text = stringResource(R.string.inspector_task_meta, task.id, task.agentName),
                         color = CyanAccent,
                         fontSize = 12.sp
                     )
@@ -67,7 +72,7 @@ fun TaskInspectorModal(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Step Node Graph Visualizer
-            Text(text = "Execution Node Graph (${task.flowType})", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(text = stringResource(R.string.inspector_graph, task.flowType), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
@@ -97,7 +102,7 @@ fun TaskInspectorModal(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Step $step",
+                            text = stringResource(R.string.inspector_step, step),
                             color = nodeColor,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -105,7 +110,7 @@ fun TaskInspectorModal(
                     }
 
                     if (step < task.totalSteps) {
-                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = "Next", tint = TextMuted, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = TextMuted, modifier = Modifier.size(12.dp))
                     }
                 }
             }
@@ -124,8 +129,8 @@ fun TaskInspectorModal(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.Gavel, contentDescription = "HITL Gate", tint = StatusApprovalRequired)
-                            Text(text = "Human-in-the-Loop Decision Sheet", color = StatusApprovalRequired, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Icon(imageVector = Icons.Default.Gavel, contentDescription = stringResource(R.string.cd_hitl_gate), tint = StatusApprovalRequired)
+                            Text(text = stringResource(R.string.inspector_decision), color = StatusApprovalRequired, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(text = task.hitlReason, color = TextPrimary, fontSize = 12.sp)
@@ -141,18 +146,18 @@ fun TaskInspectorModal(
                                 shape = RoundedCornerShape(6.dp),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, StatusError),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusError),
-                                modifier = Modifier.weight(1f).height(40.dp)
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
                             ) {
-                                Text("Reject", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.inspector_reject), fontWeight = FontWeight.Bold)
                             }
 
                             Button(
                                 onClick = onApproveHitl,
                                 shape = RoundedCornerShape(6.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = StatusOnline),
-                                modifier = Modifier.weight(1f).height(40.dp)
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
                             ) {
-                                Text("Approve", color = BackgroundDark, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.inspector_approve), color = OnStatusFill, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -162,7 +167,7 @@ fun TaskInspectorModal(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Log Console Stream Box
-            Text(text = "Execution Log Stream (Real-Time)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(text = stringResource(R.string.inspector_logs), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
 
             Surface(
@@ -190,9 +195,9 @@ fun TaskInspectorModal(
                 onClick = onDismiss,
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SurfaceVariantDark),
-                modifier = Modifier.fillMaxWidth().height(44.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
             ) {
-                Text("Close Inspector", color = TextPrimary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.inspector_close), color = TextPrimary, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(12.dp))

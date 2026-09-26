@@ -1,16 +1,19 @@
 package com.codyforbes.agentos.data
 
+import android.util.Log
+import androidx.room.withTransaction
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class AgentOSRepository(
     private val db: AgentOSDatabase,
-    private val scope: CoroutineScope
+    private val secrets: AgentSecrets,
+    private val backgroundScope: CoroutineScope,
+    private val seedSampleData: Boolean = true,
 ) {
     val agents: Flow<List<AgentEntity>> = db.agentDao().getAllAgents()
     val tasks: Flow<List<TaskExecutionEntity>> = db.taskExecutionDao().getAllTasks()
@@ -18,8 +21,16 @@ class AgentOSRepository(
     val settings: Flow<SystemSettingsEntity?> = db.systemSettingsDao().getSettings()
 
     init {
-        scope.launch(Dispatchers.IO) {
-            seedInitialDataIfNeeded()
+        if (seedSampleData) {
+            backgroundScope.launch {
+                try {
+                    seedInitialDataIfNeeded()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    Log.e(TAG, "Background work failed")
+                }
+            }
         }
     }
 
@@ -32,7 +43,7 @@ class AgentOSRepository(
                     name = "FinanceBot-v2",
                     provider = "Anthropic",
                     endpointUrl = "https://api.anthropic.com/v1/messages",
-                    maskedApiKey = "sk-ant-api03-••••••••••••39a1",
+                    maskedApiKey = "••••39a1",
                     status = "AWAITING_APPROVAL",
                     tags = "Finance,Audit,PDF",
                     maxCostCapUSD = 1.50,
@@ -48,7 +59,7 @@ class AgentOSRepository(
                     name = "DataExtractionAgent",
                     provider = "OpenAI",
                     endpointUrl = "https://api.openai.com/v1/chat/completions",
-                    maskedApiKey = "sk-proj-••••••••••••811f",
+                    maskedApiKey = "••••811f",
                     status = "EXECUTING",
                     tags = "ETL,JSON,DB",
                     maxCostCapUSD = 2.00,
@@ -64,7 +75,7 @@ class AgentOSRepository(
                     name = "CustomerSupportDAG",
                     provider = "LangGraph",
                     endpointUrl = "https://agentos.internal/langgraph/support-v1",
-                    maskedApiKey = "Bearer lg_sec_••••••••4f2b",
+                    maskedApiKey = "••••4f2b",
                     status = "ONLINE_IDLE",
                     tags = "Support,Multi-Agent,Workflow",
                     maxCostCapUSD = 5.00,
@@ -80,7 +91,7 @@ class AgentOSRepository(
                     name = "SecurityScannerAgent",
                     provider = "Custom REST",
                     endpointUrl = "https://sec.internal.net/v2/scan",
-                    maskedApiKey = "X-Api-Key sec_••••••••90aa",
+                    maskedApiKey = "••••90aa",
                     status = "RATE_LIMITED",
                     tags = "Security,Audit,Shell",
                     maxCostCapUSD = 1.00,
@@ -205,7 +216,14 @@ class AgentOSRepository(
     }
 
     suspend fun deleteAgent(id: String) {
-        db.agentDao().deleteAgent(id)
+        db.withTransaction {
+            db.agentDao().deleteAgent(id)
+        }
+        secrets.delete(id)
+    }
+
+    suspend fun storeAgentSecret(agentId: String, apiKey: String) {
+        secrets.put(agentId, apiKey)
     }
 
     suspend fun saveTask(task: TaskExecutionEntity) {
@@ -217,76 +235,94 @@ class AgentOSRepository(
     }
 
     suspend fun approveHitlTask(taskId: String) {
-        val task = db.taskExecutionDao().getTaskById(taskId) ?: return
-        val nowLog = "\n[OPERATOR HITL APPROVED] Authorization granted by operator. Resuming execution..."
-        val updatedTask = task.copy(
-            status = "RUNNING",
-            hitlReason = "",
-            logsText = task.logsText + nowLog,
-            updatedAt = System.currentTimeMillis()
-        )
-        db.taskExecutionDao().updateTask(updatedTask)
-        db.agentDao().updateAgentStatus(task.agentId, "EXECUTING")
+        val started = db.withTransaction {
+            val task = db.taskExecutionDao().getTaskById(taskId) ?: return@withTransaction false
+            if (task.status == "KILLED" || isKillSwitchEngaged()) return@withTransaction false
+            val updatedTask = task.copy(
+                status = "RUNNING",
+                hitlReason = "",
+                logsText = task.logsText + APPROVED_LOG,
+                updatedAt = System.currentTimeMillis(),
+            )
+            db.taskExecutionDao().updateTask(updatedTask)
+            db.agentDao().updateAgentStatus(task.agentId, "EXECUTING")
+            true
+        }
+        if (!started) return
 
-        // Simulate background completion
-        scope.launch(Dispatchers.IO) {
-            delay(2500)
-            val finishLog = "\n[10:49:10] STEP 3/4 COMPLETE: Executed write query on [Users_DB] (14 rows modified)." +
-                    "\n[10:49:15] STEP 4/4 COMPLETE: Generated execution audit record." +
-                    "\n[10:49:16] TASK COMPLETED SUCCESSFULLY."
-            val completedTask = updatedTask.copy(
+        backgroundScope.launch {
+            try {
+                delay(COMPLETION_DELAY_MS)
+                finishApprovedTask(taskId)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                Log.e(TAG, "Background work failed")
+            }
+        }
+    }
+
+    private suspend fun finishApprovedTask(taskId: String) {
+        db.withTransaction {
+            val latest = db.taskExecutionDao().getTaskById(taskId) ?: return@withTransaction
+            if (latest.status == "KILLED" || isKillSwitchEngaged()) return@withTransaction
+            val completedTask = latest.copy(
                 status = "COMPLETED",
-                currentStepIndex = updatedTask.totalSteps,
-                logsText = updatedTask.logsText + finishLog,
-                updatedAt = System.currentTimeMillis()
+                currentStepIndex = latest.totalSteps,
+                logsText = latest.logsText + APPROVED_FINISH_LOG,
+                updatedAt = System.currentTimeMillis(),
             )
             db.taskExecutionDao().updateTask(completedTask)
-            db.agentDao().updateAgentStatus(task.agentId, "ONLINE_IDLE")
-
-            // Add metric
+            db.agentDao().updateAgentStatus(latest.agentId, "ONLINE_IDLE")
             db.analyticsMetricDao().insertMetric(
                 AnalyticsMetricEntity(
                     timestamp = System.currentTimeMillis(),
-                    agentId = task.agentId,
-                    agentName = task.agentName,
-                    tokensInput = task.tokensInput,
-                    tokensOutput = task.tokensOutput,
-                    tokensReasoning = task.tokensReasoning,
-                    costUSD = task.actualCostUSD,
+                    agentId = latest.agentId,
+                    agentName = latest.agentName,
+                    tokensInput = latest.tokensInput,
+                    tokensOutput = latest.tokensOutput,
+                    tokensReasoning = latest.tokensReasoning,
+                    costUSD = latest.actualCostUSD,
                     latencyMs = 3800,
-                    isSuccess = true
-                )
+                    isSuccess = true,
+                ),
             )
         }
     }
 
     suspend fun rejectHitlTask(taskId: String) {
-        val task = db.taskExecutionDao().getTaskById(taskId) ?: return
-        val nowLog = "\n[OPERATOR HITL REJECTED] Operator denied permission. Task halted safely without mutations."
-        val updatedTask = task.copy(
-            status = "FAILED",
-            hitlReason = "",
-            logsText = task.logsText + nowLog,
-            updatedAt = System.currentTimeMillis()
-        )
-        db.taskExecutionDao().updateTask(updatedTask)
-        db.agentDao().updateAgentStatus(task.agentId, "ONLINE_IDLE")
+        db.withTransaction {
+            val task = db.taskExecutionDao().getTaskById(taskId) ?: return@withTransaction
+            if (task.status == "KILLED" || isKillSwitchEngaged()) return@withTransaction
+            val updatedTask = task.copy(
+                status = "FAILED",
+                hitlReason = "",
+                logsText = task.logsText + REJECTED_LOG,
+                updatedAt = System.currentTimeMillis(),
+            )
+            db.taskExecutionDao().updateTask(updatedTask)
+            db.agentDao().updateAgentStatus(task.agentId, "ONLINE_IDLE")
+        }
     }
 
     suspend fun triggerEmergencyKillSwitch() {
-        db.taskExecutionDao().killAllActiveTasks()
-        db.agentDao().stopAllExecutingAgents()
-        val currentSettings = db.systemSettingsDao().getSettingsDirect() ?: SystemSettingsEntity()
-        db.systemSettingsDao().insertSettings(
-            currentSettings.copy(emergencyKillSwitchEngaged = true)
-        )
+        db.withTransaction {
+            db.taskExecutionDao().killAllActiveTasks()
+            db.agentDao().stopAllExecutingAgents()
+            val currentSettings = db.systemSettingsDao().getSettingsDirect() ?: SystemSettingsEntity()
+            db.systemSettingsDao().insertSettings(
+                currentSettings.copy(emergencyKillSwitchEngaged = true),
+            )
+        }
     }
 
     suspend fun resetKillSwitch() {
-        val currentSettings = db.systemSettingsDao().getSettingsDirect() ?: SystemSettingsEntity()
-        db.systemSettingsDao().insertSettings(
-            currentSettings.copy(emergencyKillSwitchEngaged = false)
-        )
+        db.withTransaction {
+            val currentSettings = db.systemSettingsDao().getSettingsDirect() ?: SystemSettingsEntity()
+            db.systemSettingsDao().insertSettings(
+                currentSettings.copy(emergencyKillSwitchEngaged = false),
+            )
+        }
     }
 
     suspend fun createAndRunTask(
@@ -324,51 +360,102 @@ class AgentOSRepository(
                 "Agent requests write permission to update database records based on objective."
             else ""
         )
-        db.taskExecutionDao().insertTask(newTask)
-        db.agentDao().updateAgentStatus(agentId, if (newTask.status == "AWAITING_HITL") "AWAITING_APPROVAL" else "EXECUTING")
-
-        if (newTask.status == "RUNNING") {
-            scope.launch(Dispatchers.IO) {
-                delay(3000)
-                val taskAfter1 = db.taskExecutionDao().getTaskById(taskId) ?: return@launch
-                if (taskAfter1.status == "KILLED") return@launch
-
-                val updated2 = taskAfter1.copy(
-                    currentStepIndex = 2,
-                    logsText = taskAfter1.logsText + "\n[10:50:08] STEP 2/3 COMPLETE: Agent executed reasoning chain & generated response artifact."
-                )
-                db.taskExecutionDao().updateTask(updated2)
-
-                delay(3000)
-                val taskAfter2 = db.taskExecutionDao().getTaskById(taskId) ?: return@launch
-                if (taskAfter2.status == "KILLED") return@launch
-
-                val completed = taskAfter2.copy(
-                    status = "COMPLETED",
-                    currentStepIndex = taskAfter2.totalSteps,
-                    actualCostUSD = 0.12,
-                    logsText = taskAfter2.logsText + "\n[10:50:12] STEP 3/3 COMPLETE: Validation verified.\n[10:50:13] TASK COMPLETED SUCCESSFULLY.",
-                    updatedAt = System.currentTimeMillis()
-                )
-                db.taskExecutionDao().updateTask(completed)
-                db.agentDao().updateAgentStatus(agentId, "ONLINE_IDLE")
-
-                db.analyticsMetricDao().insertMetric(
-                    AnalyticsMetricEntity(
-                        timestamp = System.currentTimeMillis(),
-                        agentId = agentId,
-                        agentName = agentName,
-                        tokensInput = 12500,
-                        tokensOutput = 950,
-                        tokensReasoning = 3200,
-                        costUSD = 0.12,
-                        latencyMs = 6200,
-                        isSuccess = true
-                    )
+        val initialStatus = if (isKillSwitchEngaged()) "KILLED" else newTask.status
+        val taskToInsert = if (initialStatus == "KILLED") {
+            newTask.copy(status = "KILLED", logsText = newTask.logsText + KILLED_LOG)
+        } else {
+            newTask
+        }
+        db.withTransaction {
+            db.taskExecutionDao().insertTask(taskToInsert)
+            if (initialStatus != "KILLED") {
+                db.agentDao().updateAgentStatus(
+                    agentId,
+                    if (initialStatus == "AWAITING_HITL") "AWAITING_APPROVAL" else "EXECUTING",
                 )
             }
         }
 
+        if (initialStatus == "RUNNING") {
+            backgroundScope.launch {
+                try {
+                    advanceRunningTask(taskId, agentId, agentName)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    Log.e(TAG, "Background work failed")
+                }
+            }
+        }
+
         return taskId
+    }
+
+    private suspend fun advanceRunningTask(taskId: String, agentId: String, agentName: String) {
+        delay(STEP_DELAY_MS)
+        val stillRunning = db.withTransaction {
+            val taskAfter1 = db.taskExecutionDao().getTaskById(taskId) ?: return@withTransaction false
+            if (taskAfter1.status == "KILLED" || isKillSwitchEngaged()) return@withTransaction false
+            db.taskExecutionDao().updateTask(
+                taskAfter1.copy(
+                    currentStepIndex = 2,
+                    logsText = taskAfter1.logsText + STEP_TWO_LOG,
+                ),
+            )
+            true
+        }
+        if (!stillRunning) return
+
+        delay(STEP_DELAY_MS)
+        db.withTransaction {
+            val taskAfter2 = db.taskExecutionDao().getTaskById(taskId) ?: return@withTransaction
+            if (taskAfter2.status == "KILLED" || isKillSwitchEngaged()) return@withTransaction
+            db.taskExecutionDao().updateTask(
+                taskAfter2.copy(
+                    status = "COMPLETED",
+                    currentStepIndex = taskAfter2.totalSteps,
+                    actualCostUSD = 0.12,
+                    logsText = taskAfter2.logsText + STEP_DONE_LOG,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+            db.agentDao().updateAgentStatus(agentId, "ONLINE_IDLE")
+            db.analyticsMetricDao().insertMetric(
+                AnalyticsMetricEntity(
+                    timestamp = System.currentTimeMillis(),
+                    agentId = agentId,
+                    agentName = agentName,
+                    tokensInput = 12500,
+                    tokensOutput = 950,
+                    tokensReasoning = 3200,
+                    costUSD = 0.12,
+                    latencyMs = 6200,
+                    isSuccess = true,
+                ),
+            )
+        }
+    }
+
+    private suspend fun isKillSwitchEngaged(): Boolean {
+        return db.systemSettingsDao().getSettingsDirect()?.emergencyKillSwitchEngaged == true
+    }
+
+    private companion object {
+        const val TAG = "AgentOSRepository"
+        const val COMPLETION_DELAY_MS = 2_500L
+        const val STEP_DELAY_MS = 3_000L
+        const val APPROVED_LOG =
+            "\n[OPERATOR HITL APPROVED] Authorization granted by operator. Resuming execution..."
+        const val APPROVED_FINISH_LOG =
+            "\n[10:49:10] STEP 3/4 COMPLETE: Executed write query on [Users_DB] (14 rows modified)." +
+                "\n[10:49:15] STEP 4/4 COMPLETE: Generated execution audit record." +
+                "\n[10:49:16] TASK COMPLETED SUCCESSFULLY."
+        const val REJECTED_LOG =
+            "\n[OPERATOR HITL REJECTED] Operator denied permission. Task halted safely without mutations."
+        const val KILLED_LOG = "\n[EMERGENCY KILL SWITCH ENGAGED - EXECUTION HALTED]"
+        const val STEP_TWO_LOG =
+            "\n[10:50:08] STEP 2/3 COMPLETE: Agent executed reasoning chain & generated response artifact."
+        const val STEP_DONE_LOG =
+            "\n[10:50:12] STEP 3/3 COMPLETE: Validation verified.\n[10:50:13] TASK COMPLETED SUCCESSFULLY."
     }
 }

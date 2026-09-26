@@ -1,0 +1,430 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "bbc63f092a339034349c1e807d202ef4",
+    "entities": [
+      {
+        "tableName": "agents",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `provider` TEXT NOT NULL, `endpointUrl` TEXT NOT NULL, `maskedApiKey` TEXT NOT NULL, `status` TEXT NOT NULL, `tags` TEXT NOT NULL, `maxCostCapUSD` REAL NOT NULL, `timeoutSeconds` INTEGER NOT NULL, `hitlEnabled` INTEGER NOT NULL, `healthScore` INTEGER NOT NULL, `dailyTokenBurn` INTEGER NOT NULL, `totalCostUSD` REAL NOT NULL, `capabilities` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endpointUrl",
+            "columnName": "endpointUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maskedApiKey",
+            "columnName": "maskedApiKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxCostCapUSD",
+            "columnName": "maxCostCapUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeoutSeconds",
+            "columnName": "timeoutSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hitlEnabled",
+            "columnName": "hitlEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthScore",
+            "columnName": "healthScore",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dailyTokenBurn",
+            "columnName": "dailyTokenBurn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCostUSD",
+            "columnName": "totalCostUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "capabilities",
+            "columnName": "capabilities",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_agents_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_agents_status` ON `${TABLE_NAME}` (`status`)"
+          }
+        ]
+      },
+      {
+        "tableName": "task_executions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `agentId` TEXT NOT NULL, `agentName` TEXT NOT NULL, `flowType` TEXT NOT NULL, `status` TEXT NOT NULL, `objective` TEXT NOT NULL, `parametersJson` TEXT NOT NULL, `currentStepIndex` INTEGER NOT NULL, `totalSteps` INTEGER NOT NULL, `estimatedCostUSD` REAL NOT NULL, `actualCostUSD` REAL NOT NULL, `tokensInput` INTEGER NOT NULL, `tokensOutput` INTEGER NOT NULL, `tokensReasoning` INTEGER NOT NULL, `logsText` TEXT NOT NULL, `hitlReason` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agentId",
+            "columnName": "agentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agentName",
+            "columnName": "agentName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flowType",
+            "columnName": "flowType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "objective",
+            "columnName": "objective",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parametersJson",
+            "columnName": "parametersJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentStepIndex",
+            "columnName": "currentStepIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalSteps",
+            "columnName": "totalSteps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimatedCostUSD",
+            "columnName": "estimatedCostUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualCostUSD",
+            "columnName": "actualCostUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensInput",
+            "columnName": "tokensInput",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensOutput",
+            "columnName": "tokensOutput",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensReasoning",
+            "columnName": "tokensReasoning",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "logsText",
+            "columnName": "logsText",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hitlReason",
+            "columnName": "hitlReason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_task_executions_agentId",
+            "unique": false,
+            "columnNames": [
+              "agentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_executions_agentId` ON `${TABLE_NAME}` (`agentId`)"
+          },
+          {
+            "name": "index_task_executions_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_executions_status` ON `${TABLE_NAME}` (`status`)"
+          }
+        ]
+      },
+      {
+        "tableName": "analytics_metrics",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `agentId` TEXT NOT NULL, `agentName` TEXT NOT NULL, `tokensInput` INTEGER NOT NULL, `tokensOutput` INTEGER NOT NULL, `tokensReasoning` INTEGER NOT NULL, `costUSD` REAL NOT NULL, `latencyMs` INTEGER NOT NULL, `isSuccess` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agentId",
+            "columnName": "agentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agentName",
+            "columnName": "agentName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensInput",
+            "columnName": "tokensInput",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensOutput",
+            "columnName": "tokensOutput",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokensReasoning",
+            "columnName": "tokensReasoning",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "costUSD",
+            "columnName": "costUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latencyMs",
+            "columnName": "latencyMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSuccess",
+            "columnName": "isSuccess",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_analytics_metrics_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_analytics_metrics_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          },
+          {
+            "name": "index_analytics_metrics_agentId",
+            "unique": false,
+            "columnNames": [
+              "agentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_analytics_metrics_agentId` ON `${TABLE_NAME}` (`agentId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "system_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `dailyCostCapUSD` REAL NOT NULL, `monthlyCostCapUSD` REAL NOT NULL, `circuitBreakerEnabled` INTEGER NOT NULL, `emergencyKillSwitchEngaged` INTEGER NOT NULL, `activeRole` TEXT NOT NULL, `pushNotificationsEnabled` INTEGER NOT NULL, `hitlGateForMutations` INTEGER NOT NULL, `hitlGateForShell` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dailyCostCapUSD",
+            "columnName": "dailyCostCapUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthlyCostCapUSD",
+            "columnName": "monthlyCostCapUSD",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "circuitBreakerEnabled",
+            "columnName": "circuitBreakerEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emergencyKillSwitchEngaged",
+            "columnName": "emergencyKillSwitchEngaged",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeRole",
+            "columnName": "activeRole",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pushNotificationsEnabled",
+            "columnName": "pushNotificationsEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hitlGateForMutations",
+            "columnName": "hitlGateForMutations",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hitlGateForShell",
+            "columnName": "hitlGateForShell",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bbc63f092a339034349c1e807d202ef4')"
+    ]
+  }
+}

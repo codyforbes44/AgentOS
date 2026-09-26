@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.components
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codyforbes.agentos.data.AgentEntity
+import com.codyforbes.agentos.ui.formatUsd
 import com.codyforbes.agentos.ui.theme.*
 
 @Composable
@@ -123,7 +127,7 @@ fun AgentCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "HEALTH SCORE", color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.card_health_label), color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -145,9 +149,9 @@ fun AgentCard(
                 }
 
                 Column {
-                    Text(text = "DAILY TOKEN BURN", color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.card_token_burn), color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "${agent.dailyTokenBurn / 1000}k tokens",
+                        text = stringResource(R.string.card_token_value, agent.dailyTokenBurn / 1000),
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
@@ -155,9 +159,9 @@ fun AgentCard(
                 }
 
                 Column {
-                    Text(text = "TOTAL COST", color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.card_total_cost), color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "$${String.format("%.2f", agent.totalCostUSD)}",
+                        text = "$${formatUsd(agent.totalCostUSD)}",
                         color = CyanAccent,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
@@ -200,15 +204,15 @@ fun AgentCard(
                     border = androidx.compose.foundation.BorderStroke(1.dp, StatusExecuting),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusExecuting),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Delegate",
+                        contentDescription = null,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Delegate", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.card_delegate), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

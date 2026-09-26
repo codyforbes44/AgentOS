@@ -1,5 +1,8 @@
 package com.codyforbes.agentos.ui.components
 
+import com.codyforbes.agentos.R
+
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -7,9 +10,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.codyforbes.agentos.ui.formatUsd
 import com.codyforbes.agentos.ui.theme.*
 
 /**
@@ -54,7 +58,7 @@ fun GlobalStatusIndicator(
                     .background(if (activeTasks > 0) StatusExecuting else StatusOnline)
             )
             Text(
-                text = "Active Tasks: ",
+                text = stringResource(R.string.status_active_tasks),
                 color = TextMuted,
                 fontSize = 11.sp
             )
@@ -66,7 +70,7 @@ fun GlobalStatusIndicator(
             )
         }
 
-        Divider(
+        VerticalDivider(
             color = SurfaceBorderDark,
             modifier = Modifier
                 .height(14.dp)
@@ -80,24 +84,24 @@ fun GlobalStatusIndicator(
         ) {
             Icon(
                 imageVector = Icons.Default.AttachMoney,
-                contentDescription = "Daily Token Burn Rate",
+                contentDescription = stringResource(R.string.cd_burn_rate),
                 tint = CyanAccent,
                 modifier = Modifier.size(12.dp)
             )
             Text(
-                text = "Burn: ",
+                text = stringResource(R.string.status_burn_label),
                 color = TextMuted,
                 fontSize = 11.sp
             )
             Text(
-                text = "$${String.format("%.2f", dailyBurnUSD)}/day",
+                text = stringResource(R.string.status_burn_value, formatUsd(dailyBurnUSD)),
                 color = TextPrimary,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 11.sp
             )
         }
 
-        Divider(
+        VerticalDivider(
             color = SurfaceBorderDark,
             modifier = Modifier
                 .height(14.dp)
@@ -116,7 +120,7 @@ fun GlobalStatusIndicator(
                     .background(if (isKillSwitchEngaged) StatusError else StatusOnline)
             )
             Text(
-                text = if (isKillSwitchEngaged) "HALTED" else "ONLINE",
+                text = if (isKillSwitchEngaged) stringResource(R.string.status_halted) else stringResource(R.string.status_system_online),
                 color = if (isKillSwitchEngaged) StatusError else StatusOnline,
                 fontWeight = FontWeight.Bold,
                 fontSize = 10.sp
